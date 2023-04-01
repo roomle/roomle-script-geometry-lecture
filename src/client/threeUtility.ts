@@ -23,9 +23,10 @@ export const newObjectMesh = (geometry: any, edgeColor: ColorRepresentation, fac
 
 export const newBoxMesh = (edgeColor: ColorRepresentation, faceColor: ColorRepresentation, opacity: number) => {
     const geometry = new BoxGeometry(1, 1, 1);
-    const material = new MeshLambertMaterial({color: 0xe02020, transparent: true, opacity});
+    const material = new MeshLambertMaterial({color: faceColor, transparent: true, opacity});
     const mesh = new Mesh(geometry, material);
-    const box = new BoxHelper(mesh, 0x000000);
+    mesh.visible = opacity > 0;
+    const box = new BoxHelper(mesh, edgeColor);
     (box.material as LineBasicMaterial).linewidth = 3;
     const objectGroup = new Group();
     objectGroup.add(mesh);
