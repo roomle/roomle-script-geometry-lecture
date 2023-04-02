@@ -14,6 +14,7 @@ import {
     Vector3,
     WireframeGeometry,
 } from 'three';
+import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GUI } from 'dat.gui'
 
 export interface LectureScene {
@@ -65,4 +66,17 @@ export const addScaleArrowHelpers = (sourceGroup: Object3D, targetObject: Object
         const arrowHelper = new ArrowHelper(directionVector.normalize(), new Vector3(0, 0, 0), distance, 0x00c000);
         sourceGroup.add(arrowHelper);
     });  
+}
+
+export const createLabel = (text: string): CSS2DObject => {
+    const labelDiv = document.createElement( 'div' );
+    labelDiv.className = 'label';
+    labelDiv.textContent = text;
+    labelDiv.style.backgroundColor = 'transparent';
+    const labelObject = new CSS2DObject(labelDiv);
+    labelObject.position.set(0, 0, 0);
+    // @ts-ignore
+    labelObject.center.set(0.5, -0.5);
+    labelObject.layers.set(0);
+    return labelObject;
 }

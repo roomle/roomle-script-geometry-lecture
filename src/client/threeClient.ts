@@ -11,6 +11,7 @@ import {
     Vector3,
     WebGLRenderer,
 } from 'three';
+import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 // @ts-ignore
 import Stats from 'three/examples/jsm/libs/stats.module' 
 import { GUI } from 'dat.gui'
@@ -21,11 +22,15 @@ export const helloCube = (canvas: any) => {
     document.body.appendChild(renderer.domElement);
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(window.devicePixelRatio);
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    document.body.appendChild(labelRenderer.domElement);
 
     const camera = new PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.y = 4;
-    camera.position.z = 0;
-    const controls = new Controls(renderer, camera)
+    camera.position.set(-2, 2, 3);
+    const controls = new Controls(renderer, labelRenderer.domElement, camera);
 
     const scene = new Scene();
     scene.background = new Color(0xffffff);
@@ -54,7 +59,7 @@ export const helloCube = (canvas: any) => {
     gui.add(uiProperties, 'axis helper').onChange((value) => axesHelper.visible = value);
     const sceneFolder = gui.addFolder('Scene');
 
-    const scaleCubeScene = new ScaleCubeScene(new Vector3(1, 0, 0), new Vector3(1.5, 0.5, .5))
+    const scaleCubeScene = new ScaleCubeScene(new Vector3(1, 0, 0), new Vector3(1.501, 0.5, 0.499))
         .addControls(controls)
         .addGUI(sceneFolder);
     scene.add(scaleCubeScene.getSceneGroup());
@@ -80,6 +85,7 @@ export const helloCube = (canvas: any) => {
 
     const render = () => {
         renderer.render(scene, camera);
+        labelRenderer.render(scene, camera);
     }
     requestAnimationFrame(animate);
 }

@@ -1,5 +1,6 @@
 import { 
     addScaleArrowHelpers,
+    createLabel,
     LectureScene,
     newBoxMesh,
     newDotMesh
@@ -11,6 +12,7 @@ import {
      Vector3,
 } from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
+import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GUI } from 'dat.gui'
 
 export class ScaleCubeScene implements LectureScene {
@@ -25,6 +27,8 @@ export class ScaleCubeScene implements LectureScene {
     private transformedObjectGroup: Object3D;
     private pivotTransformControl: TransformControls | undefined;
     private meshTransformControl: TransformControls | undefined;
+    private originLabel: CSS2DObject;
+    private pivotLabel: CSS2DObject;
 
     constructor(pivotPosition: Vector3, objectPosition: Vector3) {
         this.pivotPosition = pivotPosition.clone();
@@ -45,6 +49,10 @@ export class ScaleCubeScene implements LectureScene {
         this.pivotGroup = new Group();
         this.pivotGroup.add(this.scaleGroup);
         this.sceneGroup.add(this.pivotGroup);
+        this.originLabel = createLabel('origin');
+        this.originDot.add(this.originLabel);
+        this.pivotLabel = createLabel('pivot');
+        this.pivotDot.add(this.pivotLabel);
     }
 
     public getSceneGroup(): Group {
