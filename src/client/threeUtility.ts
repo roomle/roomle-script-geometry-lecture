@@ -12,6 +12,7 @@ import {
     MeshLambertMaterial,
     Object3D,
     SphereGeometry,
+    Vector2,
     Vector3,
     WireframeGeometry,
 } from 'three';
@@ -69,15 +70,20 @@ export const addScaleArrowHelpers = (sourceGroup: Object3D, targetObject: Object
     });  
 }
 
-export const createLabel = (text: string): CSS2DObject => {
+export const createLabel = (text: string, origin?: Vector2): CSS2DObject => {
     const labelDiv = document.createElement( 'div' );
     labelDiv.className = 'label';
     labelDiv.textContent = text;
     labelDiv.style.backgroundColor = 'transparent';
     const labelObject = new CSS2DObject(labelDiv);
     labelObject.position.set(0, 0, 0);
-    // @ts-ignore
-    labelObject.center.set(0.5, -0.5);
+    if (origin) { 
+        // @ts-ignore
+        labelObject.center.set(origin.x, origin.y);
+    } else {
+        // @ts-ignore
+        labelObject.center.set(0.5, -0.5);
+    } 
     labelObject.layers.set(0);
     return labelObject;
 }
