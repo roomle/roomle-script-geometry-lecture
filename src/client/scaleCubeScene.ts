@@ -7,9 +7,11 @@ import {
 } from './threeUtility'
 import { Controls } from './threeControls';
 import {
-     Group,
-     Object3D,
-     Vector3,
+    Box3,
+    Camera,
+    Group,
+    Object3D,
+    Vector3,
 } from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -29,6 +31,8 @@ export class ScaleCubeScene implements LectureScene {
     private meshTransformControl: TransformControls | undefined;
     private originLabel: CSS2DObject;
     private pivotLabel: CSS2DObject;
+    private operationLabel: CSS2DObject;
+    private boundingBox: Box3;
 
     constructor(pivotPosition: Vector3, objectPosition: Vector3) {
         this.pivotPosition = pivotPosition.clone();
@@ -53,13 +57,16 @@ export class ScaleCubeScene implements LectureScene {
         this.originDot.add(this.originLabel);
         this.pivotLabel = createLabel('pivot');
         this.pivotDot.add(this.pivotLabel);
+        this.operationLabel = createLabel('scaleMatrixBy({1, 1, 1}, {0, 0, 0})');
+        this.sceneGroup.add(this.operationLabel);
+        this.boundingBox = new Box3().setFromObject(this.sceneGroup);
     }
 
     public getSceneGroup(): Group {
         return this.sceneGroup;
     }
 
-    public update(timestamp: number): void {
+    public update(timestamp: number, camera: Camera): void {
         this.originDot.visible = this.pivotDot.position.length() > 0.1;	
         if (this.pivotPosition.clone().sub(this.pivotDot.position).length() > 0.01 ||
             this.transformedObjectGroup.position.clone().sub(this.objectGroup.position).length() > 0.01) {
@@ -71,6 +78,17 @@ export class ScaleCubeScene implements LectureScene {
         }
         const scale = 1.5 + 0.5 * Math.sin(timestamp / 1000); 
         this.scaleGroup.scale.set(scale, scale, scale);
+        const center = new Vector3();
+        this.boundingBox.getCenter(center);
+        const size = new Vector3();
+        this.boundingBox.getSize(size);
+        const downVector = new Vector3(0, -1, 0)
+            .transformDirection(camera.matrixWorld)
+            .multiplyScalar(size.length()/2)
+        this.operationLabel.position.copy(center.add(downVector));
+        const fixedScale = scale.toFixed(2);
+        this.operationLabel.element.innerHTML = 
+            `scaleMatrixBy({${fixedScale}, ${fixedScale}, ${fixedScale}}, {${this.pivotPosition.x.toFixed(2)}, ${this.pivotPosition.y.toFixed(2)}, ${this.pivotPosition.z.toFixed(2)}})`;
     }
 
     public addControls(controls: Controls): LectureScene {

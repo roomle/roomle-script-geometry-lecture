@@ -76,7 +76,7 @@ export const helloCube = (canvas: any) => {
     const animate = (timestamp: number) => {
         const deltaTimeMs = timestamp - (previousTimeStamp ?? timestamp);
         previousTimeStamp = timestamp;
-        scaleCubeScene.update(timestamp);
+        scaleCubeScene.update(timestamp, camera);
         controls.update();
         render();
         stats.update()

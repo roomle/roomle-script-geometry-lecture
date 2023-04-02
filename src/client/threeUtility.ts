@@ -3,6 +3,7 @@ import {
     ArrowHelper,
     BoxGeometry,
     BoxHelper,
+    Camera,
     ColorRepresentation,
     Group,
     LineBasicMaterial,
@@ -19,7 +20,7 @@ import { GUI } from 'dat.gui'
 
 export interface LectureScene {
     getSceneGroup(): Group;
-    update(timestamp: number): void
+    update(timestamp: number, camera: Camera): void
     addControls(controls: Controls): LectureScene;
     addGUI(gui: GUI): LectureScene;
 }
