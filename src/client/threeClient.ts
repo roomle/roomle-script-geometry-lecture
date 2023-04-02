@@ -1,21 +1,15 @@
-import { 
-    addScaleArrowHelpers,
-    newBoxMesh,
-    newDotMesh
-} from './threeUtility'
 import { Controls } from './threeControls';
+import { ScaleCubeScene } from './scaleCubeScene';
 import {
     AmbientLight,
-    ArrowHelper,
     AxesHelper,
     DirectionalLight,
     Color,
     GridHelper,
-    Group,
     PerspectiveCamera,
     Scene,
-    WebGLRenderer,
     Vector3,
+    WebGLRenderer,
 } from 'three';
 // @ts-ignore
 import Stats from 'three/examples/jsm/libs/stats.module' 
@@ -48,30 +42,6 @@ export const helloCube = (canvas: any) => {
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
-    const originDot = newDotMesh(new Vector3(0, 0, 0), 0xffff00, 1);
-    scene.add(originDot);
-    const pivotPosition = new Vector3(0, 0, 0)
-    const pivotDot = newDotMesh(pivotPosition.clone(), 0x00ff00, 1);
-    scene.add(pivotDot);
-    const objectGroup = newBoxMesh(0x808080, 0xe02020, 0);
-    scene.add(objectGroup);
-    const transformedObjectGroup = newBoxMesh(0x000000, 0xe02020, 0);
-    const scaleGroup = new Group();
-    scaleGroup.add(transformedObjectGroup);
-    const scaleArrowGroup = new Group();
-    scaleGroup.add(scaleArrowGroup);
-    addScaleArrowHelpers(scaleArrowGroup, transformedObjectGroup, pivotDot.position);
-    const pivotGroup = new Group();
-    pivotGroup.add(scaleGroup);
-    scene.add(pivotGroup);
-
-    const pivotTransformControl = controls.addTransformControl(pivotDot, scene);
-    pivotTransformControl.visible = false;
-    pivotTransformControl.enabled = false;
-    const meshTransformControl = controls.addTransformControl(objectGroup, scene);
-    meshTransformControl.visible = false;
-    meshTransformControl.enabled = false;
-
     // @ts-ignore
     const stats = new Stats();
     document.body.appendChild(stats.dom);
@@ -79,19 +49,15 @@ export const helloCube = (canvas: any) => {
     const uiProperties = {
         'grid helper': gridHelper.visible,
         'axis helper': axesHelper.visible,
-        'pivot transform control': pivotTransformControl.visible,
-        'mesh transform control': meshTransformControl.visible,
     };
     gui.add(uiProperties, 'grid helper').onChange((value) => gridHelper.visible = value);
     gui.add(uiProperties, 'axis helper').onChange((value) => axesHelper.visible = value);
-    gui.add(uiProperties, 'pivot transform control').onChange((value) => {
-        pivotTransformControl.visible = value;
-        pivotTransformControl.enabled = value;
-    });
-    gui.add(uiProperties, 'mesh transform control').onChange((value) => {
-        meshTransformControl.visible = value;
-        meshTransformControl.enabled = value;
-    });
+    const sceneFolder = gui.addFolder('Scene');
+
+    const scaleCubeScene = new ScaleCubeScene(new Vector3(1, 0, 0), new Vector3(1.5, 0.5, .5))
+        .addControls(controls)
+        .addGUI(sceneFolder);
+    scene.add(scaleCubeScene.getSceneGroup());
 
     window.addEventListener('resize', () => {
         const width = window.innerWidth;
@@ -105,21 +71,11 @@ export const helloCube = (canvas: any) => {
     const animate = (timestamp: number) => {
         const deltaTimeMs = timestamp - (previousTimeStamp ?? timestamp);
         previousTimeStamp = timestamp;
-        requestAnimationFrame(animate);
-        originDot.visible = pivotDot.position.length() > 0.1;	
-        if (pivotPosition.clone().sub(pivotDot.position).length() > 0.01 ||
-            transformedObjectGroup.position.clone().sub(objectGroup.position).length() > 0.01) {
-            pivotPosition.copy(pivotDot.position);
-            pivotGroup.position.copy(pivotPosition);
-            transformedObjectGroup.position.copy(objectGroup.position.clone().sub(pivotPosition));
-            scaleArrowGroup.clear();
-            addScaleArrowHelpers(scaleArrowGroup, transformedObjectGroup, pivotDot.position);
-        }
-        const scale = 1.5 + 0.5 * Math.sin(timestamp / 1000); 
-        scaleGroup.scale.set(scale, scale, scale);
+        scaleCubeScene.update(timestamp);
         controls.update();
         render();
         stats.update()
+        requestAnimationFrame(animate);
     }
 
     const render = () => {

@@ -1,3 +1,4 @@
+import { Controls } from './threeControls';
 import {
     ArrowHelper,
     BoxGeometry,
@@ -13,6 +14,14 @@ import {
     Vector3,
     WireframeGeometry,
 } from 'three';
+import { GUI } from 'dat.gui'
+
+export interface LectureScene {
+    getSceneGroup(): Group;
+    update(timestamp: number): void
+    addControls(controls: Controls): LectureScene;
+    addGUI(gui: GUI): LectureScene;
+}
 
 export const newObjectMesh = (geometry: any, edgeColor: ColorRepresentation, faceColor: ColorRepresentation, opacity: number): Group => {
     const material = new MeshLambertMaterial({color: faceColor, transparent: opacity < 1, opacity});
@@ -46,7 +55,7 @@ export const newDotMesh = (position: Vector3, color: ColorRepresentation, opacit
     return mesh;
 };
 
-export const addScaleArrowHelpers = (sourceGroup: Group, targetObject: Object3D, pivot: Vector3) => {
+export const addScaleArrowHelpers = (sourceGroup: Object3D, targetObject: Object3D, pivot: Vector3) => {
     const directions = [[1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1], [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1]];
     directions.forEach((direction) => {
         const directionVector = new Vector3(direction[0], direction[1], direction[2])
