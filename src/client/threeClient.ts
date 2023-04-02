@@ -3,8 +3,7 @@ import {
     newBoxMesh,
     newDotMesh
 } from './threeUtility'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
+import { Controls } from './threeControls';
 import {
     AmbientLight,
     ArrowHelper,
@@ -32,7 +31,7 @@ export const helloCube = (canvas: any) => {
     const camera = new PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.y = 4;
     camera.position.z = 0;
-    const controls = new OrbitControls(camera, renderer.domElement)
+    const controls = new Controls(renderer, camera)
 
     const scene = new Scene();
     scene.background = new Color(0xffffff);
@@ -48,34 +47,30 @@ export const helloCube = (canvas: any) => {
     directionalLight.position.set(1, 3, 1);
     directionalLight.castShadow = true;
     scene.add(directionalLight);
-    const lightTransformControl = new TransformControls(camera, renderer.domElement);
-    lightTransformControl.addEventListener( 'dragging-changed', (event: any) => {
-        controls.enabled = !event.value;
-    });
-    lightTransformControl.attach(directionalLight);
-    lightTransformControl.visible = false;
-    scene.add(lightTransformControl);
 
+    const originDot = newDotMesh(new Vector3(0, 0, 0), 0xffff00, 1);
+    scene.add(originDot);
+    const pivotPosition = new Vector3(0, 0, 0)
+    const pivotDot = newDotMesh(pivotPosition.clone(), 0x00ff00, 1);
+    scene.add(pivotDot);
     const objectGroup = newBoxMesh(0x808080, 0xe02020, 0);
     scene.add(objectGroup);
     const transformedObjectGroup = newBoxMesh(0x000000, 0xe02020, 0);
     const scaleGroup = new Group();
     scaleGroup.add(transformedObjectGroup);
-    scene.add(scaleGroup);
     const scaleArrowGroup = new Group();
     scaleGroup.add(scaleArrowGroup);
-    addScaleArrowHelpers(scaleArrowGroup, transformedObjectGroup);
+    addScaleArrowHelpers(scaleArrowGroup, transformedObjectGroup, pivotDot.position);
+    const pivotGroup = new Group();
+    pivotGroup.add(scaleGroup);
+    scene.add(pivotGroup);
 
-    const originDot = newDotMesh(new Vector3(0, 0, 0), 0xffff00, 1);
-    scene.add(originDot);
-
-    const meshTransformControl = new TransformControls(camera, renderer.domElement);
-    meshTransformControl.addEventListener( 'dragging-changed', (event: any) => {
-        controls.enabled = !event.value;
-    });
-    meshTransformControl.attach(objectGroup);
+    const pivotTransformControl = controls.addTransformControl(pivotDot, scene);
+    pivotTransformControl.visible = false;
+    pivotTransformControl.enabled = false;
+    const meshTransformControl = controls.addTransformControl(objectGroup, scene);
     meshTransformControl.visible = false;
-    scene.add(meshTransformControl);
+    meshTransformControl.enabled = false;
 
     // @ts-ignore
     const stats = new Stats();
@@ -84,11 +79,19 @@ export const helloCube = (canvas: any) => {
     const uiProperties = {
         'grid helper': gridHelper.visible,
         'axis helper': axesHelper.visible,
+        'pivot transform control': pivotTransformControl.visible,
         'mesh transform control': meshTransformControl.visible,
     };
     gui.add(uiProperties, 'grid helper').onChange((value) => gridHelper.visible = value);
     gui.add(uiProperties, 'axis helper').onChange((value) => axesHelper.visible = value);
-    gui.add(uiProperties, 'mesh transform control').onChange((value) => meshTransformControl.visible = value);
+    gui.add(uiProperties, 'pivot transform control').onChange((value) => {
+        pivotTransformControl.visible = value;
+        pivotTransformControl.enabled = value;
+    });
+    gui.add(uiProperties, 'mesh transform control').onChange((value) => {
+        meshTransformControl.visible = value;
+        meshTransformControl.enabled = value;
+    });
 
     window.addEventListener('resize', () => {
         const width = window.innerWidth;
@@ -103,11 +106,14 @@ export const helloCube = (canvas: any) => {
         const deltaTimeMs = timestamp - (previousTimeStamp ?? timestamp);
         previousTimeStamp = timestamp;
         requestAnimationFrame(animate);
-        //objectGroup.rotation.y += 45 * Math.PI / 180 * deltaTimeMs / 1000;
-        if (transformedObjectGroup.position.clone().sub(objectGroup.position).length() > 0.01) {
-            transformedObjectGroup.position.copy(objectGroup.position);
+        originDot.visible = pivotDot.position.length() > 0.1;	
+        if (pivotPosition.clone().sub(pivotDot.position).length() > 0.01 ||
+            transformedObjectGroup.position.clone().sub(objectGroup.position).length() > 0.01) {
+            pivotPosition.copy(pivotDot.position);
+            pivotGroup.position.copy(pivotPosition);
+            transformedObjectGroup.position.copy(objectGroup.position.clone().sub(pivotPosition));
             scaleArrowGroup.clear();
-            addScaleArrowHelpers(scaleArrowGroup, transformedObjectGroup);
+            addScaleArrowHelpers(scaleArrowGroup, transformedObjectGroup, pivotDot.position);
         }
         const scale = 1.5 + 0.5 * Math.sin(timestamp / 1000); 
         scaleGroup.scale.set(scale, scale, scale);

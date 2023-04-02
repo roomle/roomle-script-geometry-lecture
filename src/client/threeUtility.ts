@@ -46,10 +46,12 @@ export const newDotMesh = (position: Vector3, color: ColorRepresentation, opacit
     return mesh;
 };
 
-export const addScaleArrowHelpers = (sourceGroup: Group, targetObject: Object3D) => {
+export const addScaleArrowHelpers = (sourceGroup: Group, targetObject: Object3D, pivot: Vector3) => {
     const directions = [[1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1], [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1]];
     directions.forEach((direction) => {
-        const directionVector = new Vector3(direction[0], direction[1], direction[2]).multiplyScalar(0.5).add(targetObject.position);
+        const directionVector = new Vector3(direction[0], direction[1], direction[2])
+            .multiplyScalar(0.5)
+            .add(targetObject.position);
         const distance = directionVector.length();
         const arrowHelper = new ArrowHelper(directionVector.normalize(), new Vector3(0, 0, 0), distance, 0x00c000);
         sourceGroup.add(arrowHelper);
