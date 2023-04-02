@@ -57,7 +57,7 @@ export class ScaleCubeScene implements LectureScene {
         this.originDot.add(this.originLabel);
         this.pivotLabel = createLabel('pivot');
         this.pivotDot.add(this.pivotLabel);
-        this.operationLabel = createLabel('scaleMatrixBy({1, 1, 1}, {0, 0, 0})');
+        this.operationLabel = createLabel('ScaleMatrixBy({1, 1, 1}, {0, 0, 0})');
         this.sceneGroup.add(this.operationLabel);
         this.boundingBox = new Box3().setFromObject(this.sceneGroup);
     }
@@ -68,6 +68,7 @@ export class ScaleCubeScene implements LectureScene {
 
     public update(timestamp: number, camera: Camera): void {
         this.originDot.visible = this.pivotDot.position.length() > 0.1;	
+        this.originLabel.visible = this.originDot.visible;
         if (this.pivotPosition.clone().sub(this.pivotDot.position).length() > 0.01 ||
             this.transformedObjectGroup.position.clone().sub(this.objectGroup.position).length() > 0.01) {
             this.pivotPosition.copy(this.pivotDot.position);
@@ -86,9 +87,13 @@ export class ScaleCubeScene implements LectureScene {
             .transformDirection(camera.matrixWorld)
             .multiplyScalar(size.length()/2)
         this.operationLabel.position.copy(center.add(downVector));
-        const fixedScale = scale.toFixed(2);
-        this.operationLabel.element.innerHTML = 
-            `scaleMatrixBy({${fixedScale}, ${fixedScale}, ${fixedScale}}, {${this.pivotPosition.x.toFixed(2)}, ${this.pivotPosition.y.toFixed(2)}, ${this.pivotPosition.z.toFixed(2)}})`;
+        const fixedScale = scale.toFixed(1);
+        const pivotX = this.pivotPosition.x.toFixed(1);
+        const pivotY = this.pivotPosition.y.toFixed(1);
+        const pivotZ = this.pivotPosition.z.toFixed(1);
+        this.operationLabel.element.innerHTML = pivotX === '0.0' && pivotY === '0.0' && pivotZ === '0.0' 
+            ? `ScaleMatrixBy({${fixedScale}, ${fixedScale}, ${fixedScale}})`
+            : `ScaleMatrixBy({${fixedScale}, ${fixedScale}, ${fixedScale}}, {${pivotX}, ${pivotY}, ${pivotZ}})`;
     }
 
     public addControls(controls: Controls): LectureScene {
