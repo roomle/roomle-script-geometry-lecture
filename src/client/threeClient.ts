@@ -1,4 +1,8 @@
-import { newBoxMesh } from './threeUtility'
+import { 
+    addScaleArrowHelpers,
+    newBoxMesh,
+    newDotMesh
+} from './threeUtility'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import {
@@ -8,6 +12,7 @@ import {
     DirectionalLight,
     Color,
     GridHelper,
+    Group,
     PerspectiveCamera,
     Scene,
     WebGLRenderer,
@@ -51,22 +56,24 @@ export const helloCube = (canvas: any) => {
     lightTransformControl.visible = false;
     scene.add(lightTransformControl);
 
-    const objectGroup1 = newBoxMesh(0x808080, 0xe02020, 0);
-    scene.add(objectGroup1);
-    const objectGroup2 = newBoxMesh(0x000000, 0xe02020, 0);
-    const directions = [[1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1], [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1]];
-    directions.forEach((direction) => {
-        const directionVector = new Vector3(direction[0], direction[1], direction[2]).normalize();
-        const arrowHelper = new ArrowHelper(directionVector, new Vector3(0, 0, 0), Math.sqrt(3) / 2, 0x00c000);
-        objectGroup2.add(arrowHelper);
-    });  
-    scene.add(objectGroup2);
+    const objectGroup = newBoxMesh(0x808080, 0xe02020, 0);
+    scene.add(objectGroup);
+    const transformedObjectGroup = newBoxMesh(0x000000, 0xe02020, 0);
+    const scaleGroup = new Group();
+    scaleGroup.add(transformedObjectGroup);
+    scene.add(scaleGroup);
+    const scaleArrowGroup = new Group();
+    scaleGroup.add(scaleArrowGroup);
+    addScaleArrowHelpers(scaleArrowGroup, transformedObjectGroup);
+
+    const originDot = newDotMesh(new Vector3(0, 0, 0), 0xffff00, 1);
+    scene.add(originDot);
 
     const meshTransformControl = new TransformControls(camera, renderer.domElement);
     meshTransformControl.addEventListener( 'dragging-changed', (event: any) => {
         controls.enabled = !event.value;
     });
-    meshTransformControl.attach(objectGroup1);
+    meshTransformControl.attach(objectGroup);
     meshTransformControl.visible = false;
     scene.add(meshTransformControl);
 
@@ -78,12 +85,10 @@ export const helloCube = (canvas: any) => {
         'grid helper': gridHelper.visible,
         'axis helper': axesHelper.visible,
         'mesh transform control': meshTransformControl.visible,
-        'light transform control': lightTransformControl.visible
-    }
+    };
     gui.add(uiProperties, 'grid helper').onChange((value) => gridHelper.visible = value);
     gui.add(uiProperties, 'axis helper').onChange((value) => axesHelper.visible = value);
     gui.add(uiProperties, 'mesh transform control').onChange((value) => meshTransformControl.visible = value);
-    gui.add(uiProperties, 'light transform control').onChange((value) => lightTransformControl.visible = value);
 
     window.addEventListener('resize', () => {
         const width = window.innerWidth;
@@ -99,9 +104,13 @@ export const helloCube = (canvas: any) => {
         previousTimeStamp = timestamp;
         requestAnimationFrame(animate);
         //objectGroup.rotation.y += 45 * Math.PI / 180 * deltaTimeMs / 1000;
-        objectGroup2.position.set(objectGroup1.position.x, objectGroup1.position.y, objectGroup1.position.z);
+        if (transformedObjectGroup.position.clone().sub(objectGroup.position).length() > 0.01) {
+            transformedObjectGroup.position.copy(objectGroup.position);
+            scaleArrowGroup.clear();
+            addScaleArrowHelpers(scaleArrowGroup, transformedObjectGroup);
+        }
         const scale = 1.5 + 0.5 * Math.sin(timestamp / 1000); 
-        objectGroup2.scale.set(scale, scale, scale);
+        scaleGroup.scale.set(scale, scale, scale);
         controls.update();
         render();
         stats.update()

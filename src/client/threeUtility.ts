@@ -1,4 +1,5 @@
 import {
+    ArrowHelper,
     BoxGeometry,
     BoxHelper,
     ColorRepresentation,
@@ -7,10 +8,13 @@ import {
     LineSegments,
     Mesh,
     MeshLambertMaterial,
+    Object3D,
+    SphereGeometry,
+    Vector3,
     WireframeGeometry,
 } from 'three';
 
-export const newObjectMesh = (geometry: any, edgeColor: ColorRepresentation, faceColor: ColorRepresentation, opacity: number) => {
+export const newObjectMesh = (geometry: any, edgeColor: ColorRepresentation, faceColor: ColorRepresentation, opacity: number): Group => {
     const material = new MeshLambertMaterial({color: faceColor, transparent: opacity < 1, opacity});
     const mesh = new Mesh(geometry, material);
     const lineMaterial = new LineBasicMaterial({color: edgeColor, linewidth: 3});
@@ -19,11 +23,11 @@ export const newObjectMesh = (geometry: any, edgeColor: ColorRepresentation, fac
     objectGroup.add(mesh);
     objectGroup.add(lineSegments);
     return objectGroup; 
-}
+};
 
-export const newBoxMesh = (edgeColor: ColorRepresentation, faceColor: ColorRepresentation, opacity: number) => {
+export const newBoxMesh = (edgeColor: ColorRepresentation, faceColor: ColorRepresentation, opacity: number): Group => {
     const geometry = new BoxGeometry(1, 1, 1);
-    const material = new MeshLambertMaterial({color: faceColor, transparent: true, opacity});
+    const material = new MeshLambertMaterial({color: faceColor, transparent: opacity < 1, opacity});
     const mesh = new Mesh(geometry, material);
     mesh.visible = opacity > 0;
     const box = new BoxHelper(mesh, edgeColor);
@@ -32,4 +36,22 @@ export const newBoxMesh = (edgeColor: ColorRepresentation, faceColor: ColorRepre
     objectGroup.add(mesh);
     objectGroup.add(box);
     return objectGroup; 
+};
+
+export const newDotMesh = (position: Vector3, color: ColorRepresentation, opacity: number): Mesh => {
+    const geometry = new SphereGeometry(0.1, 32, 16);
+    const material = new MeshLambertMaterial({color, transparent: opacity < 1, opacity});
+    const mesh = new Mesh(geometry, material);
+    mesh.position.copy(position);
+    return mesh;
+};
+
+export const addScaleArrowHelpers = (sourceGroup: Group, targetObject: Object3D) => {
+    const directions = [[1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1], [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1]];
+    directions.forEach((direction) => {
+        const directionVector = new Vector3(direction[0], direction[1], direction[2]).multiplyScalar(0.5).add(targetObject.position);
+        const distance = directionVector.length();
+        const arrowHelper = new ArrowHelper(directionVector.normalize(), new Vector3(0, 0, 0), distance, 0x00c000);
+        sourceGroup.add(arrowHelper);
+    });  
 }
