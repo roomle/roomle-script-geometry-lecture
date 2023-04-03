@@ -21,6 +21,7 @@ import { GUI } from 'dat.gui'
 
 export interface LectureScene {
     getSceneGroup(): Group;
+    setVisibility(visible: boolean): void;
     update(timestamp: number, camera: Camera): void
     addControls(controls: Controls): LectureScene;
     addGUI(gui: GUI): LectureScene;

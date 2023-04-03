@@ -1,5 +1,7 @@
 import { Controls } from './threeControls';
+import { LectureScene } from './threeUtility';
 import { ScaleCubeScene } from './scaleCubeScene';
+import { RotateCubeScene } from './rotateCubeScene';
 import {
     AmbientLight,
     AxesHelper,
@@ -47,6 +49,15 @@ export const helloCube = (canvas: any) => {
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
+    const scaleCubeScene = new ScaleCubeScene(new Vector3(1, 0, 0), new Vector3(1.501, 0.5, 0.499))
+        .addControls(controls);
+    scene.add(scaleCubeScene.getSceneGroup());
+    scaleCubeScene.setVisibility(false);
+    const rotateCubeScene = new RotateCubeScene(new Vector3(1, 0, 0), new Vector3(1.501, 0.5, 0.499))
+        .addControls(controls);
+    scene.add(rotateCubeScene.getSceneGroup());
+    rotateCubeScene.setVisibility(false);
+
     // @ts-ignore
     const stats = new Stats();
     document.body.appendChild(stats.dom);
@@ -54,15 +65,33 @@ export const helloCube = (canvas: any) => {
     const uiProperties = {
         'grid helper': gridHelper.visible,
         'axis helper': axesHelper.visible,
+        'scene': 'rotate cube',
     };
     gui.add(uiProperties, 'grid helper').onChange((value) => gridHelper.visible = value);
     gui.add(uiProperties, 'axis helper').onChange((value) => axesHelper.visible = value);
-    const sceneFolder = gui.addFolder('Scene');
-
-    const scaleCubeScene = new ScaleCubeScene(new Vector3(1, 0, 0), new Vector3(1.501, 0.5, 0.499))
-        .addControls(controls)
-        .addGUI(sceneFolder);
-    scene.add(scaleCubeScene.getSceneGroup());
+    gui.add<any>(uiProperties, 'scene', ['scale cube', 'rotate cube']).onChange((scene: string) => setCurrentScene(scene));
+    let currentScene: LectureScene | null = scaleCubeScene;
+    let sceneFolder: GUI | null = gui.addFolder('Scene');
+    const setCurrentScene = (scene: string) => {
+        if (sceneFolder) {
+            gui.removeFolder(sceneFolder);
+        }
+        sceneFolder = gui.addFolder('Scene');
+        currentScene?.setVisibility(false);
+        switch (scene) {
+            case 'scale cube':
+                currentScene = scaleCubeScene;
+                break;
+            case 'rotate cube':
+                currentScene = rotateCubeScene;
+                break;
+        }
+        if (currentScene) {
+            currentScene.setVisibility(true);
+            currentScene.addGUI(sceneFolder);
+        }
+    };
+    setCurrentScene(uiProperties.scene);
 
     window.addEventListener('resize', () => {
         const width = window.innerWidth;
@@ -76,7 +105,7 @@ export const helloCube = (canvas: any) => {
     const animate = (timestamp: number) => {
         const deltaTimeMs = timestamp - (previousTimeStamp ?? timestamp);
         previousTimeStamp = timestamp;
-        scaleCubeScene.update(timestamp, camera);
+        currentScene?.update(timestamp, camera);
         controls.update();
         render();
         stats.update()
