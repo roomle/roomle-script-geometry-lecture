@@ -28,11 +28,12 @@ export const helloCube = (canvas: any) => {
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
     labelRenderer.domElement.style.position = 'absolute';
     labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none';
     document.body.appendChild(labelRenderer.domElement);
 
     const camera = new PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(-2, 2, 3);
-    const controls = new Controls(renderer, labelRenderer.domElement, camera);
+    const controls = new Controls(renderer, renderer.domElement, camera);
 
     const scene = new Scene();
     scene.background = new Color(0xffffff);
